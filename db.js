@@ -7,7 +7,7 @@ let db = null;
 const mongo = new MongoClient(process.env.MONGO_URI);
 
 try {
-  await db.connect();
+  await mongo.connect();
   db = mongo.db(process.env.BANCO);
   console.log("conected to database");
 } catch (error) {
