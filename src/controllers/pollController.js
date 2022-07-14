@@ -1,3 +1,4 @@
+import { ObjectId } from "bson";
 import db from "../../db.js";
 
 export async function signupPoll(req, res) {
@@ -35,7 +36,6 @@ export async function getPoll(req, res) {
 export async function getPollChoices(req, res) {
   const { id } = req.params;
   try {
-    //acessar bd e filtrar as as escolhas pelo poll id informado
     const pollChoices = await db
       .collection("choices")
       .find({ pollId: id })
@@ -48,6 +48,49 @@ export async function getPollChoices(req, res) {
     res.status(200).send(pollChoices);
   } catch (error) {
     console.log("erro no get das escolhas das votações ", error);
+    res.sendStatus(500);
+    return;
+  }
+}
+
+export async function getPollResults(req, res) {
+  const { id } = req.params;
+  //é o id da poll
+  try {
+    //pegando todas as choices com o mesmo id
+    const pollChoices = await db
+      .collection("choices")
+      .find({ pollId: id })
+      .toArray();
+    let choiceVotes = 0;
+    let choiceName = "";
+    for (let i = 0; i < pollChoices.length; i++) {
+      let votes = pollChoices[i].votes;
+      if (votes > choiceVotes) {
+        choiceVotes = votes;
+        choiceName = pollChoices[i].title;
+      }
+    }
+    const highVotedChoice = await db
+      .collection("choices")
+      .find({ votes: choiceVotes })
+      .toArray();
+    let result = {};
+    if (highVotedChoice.length === 1) {
+      result = {
+        title: highVotedChoice[0].title,
+        votes: highVotedChoice[0].votes,
+      };
+    } else {
+      return res.status(207).send("resultados inconclusivos");
+    }
+    const votedPoll = await db
+      .collection("polls")
+      .findOne({ _id: ObjectId(`${id}`) });
+    const pollResult = { ...votedPoll, result };
+    res.status(200).send(pollResult);
+  } catch (error) {
+    console.log("erro no get das escolhas mais votadas ", error);
     res.sendStatus(500);
     return;
   }

@@ -1,7 +1,7 @@
 import { choiceTitleSchema } from "../schemas/choiceSchema.js";
 
 export function choiceValidation(req, res, next) {
-  const { title, pollId } = req.body;
+  const { title } = req.body;
   const choiceTitleValidate = choiceTitleSchema.validate({ title });
   if (choiceTitleValidate.error) {
     console.log(
